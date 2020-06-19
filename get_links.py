@@ -18,19 +18,32 @@ import time # to sleep
 # fill this in with your job preferences!
 PREFERENCES = {
     "position_title": "Software Engineer",
-    "location": "San Francisco, CA"
+    "location": "San Francisco, CA",
+    "username": "",
+    "password":""
 }
 
 # helper method to give user time to log into glassdoor
 def login(driver):
-    driver.get('https://www.glassdoor.com/index.htm')
-
-    # keep waiting for user to log-in until the URL changes to user page
-    while True:
-        try:
-            WebDriverWait(driver, 1).until(EC.url_contains("member"))
-        except TimeoutException:
-            break
+    
+    
+    driver.get('https://www.glassdoor.com/profile/login_input.htm?userOriginHook=HEADER_SIGNIN_LINK')
+    
+    #avoids any errors with page size
+    driver.maximize_window()
+    
+    #login
+    username_field = driver.find_element_by_xpath("//*[@id='userEmail']")
+    password_field = driver.find_element_by_xpath("//*[@id='userPassword']")
+    
+    username_field.clear()
+    password_field.clear()
+    
+    username_field.send_keys(PREFERENCES['username'])
+    password_field.send_keys(PREFERENCES['password'])
+    
+    driver.find_element_by_xpath("//*[@id='InlineLoginModule']/div/div/div/div/div[3]/form/div[3]/div[1]").click()
+    
     return True # return once this is complete
 
 # navigate to appropriate job listing page
@@ -61,6 +74,28 @@ def go_to_listings(driver):
             driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
         except NoSuchElementException:
             pass
+       
+        #hitting easy_apply only, optional (useful if most of job listings are not on lever/greenhouse)
+        try:
+            more_menu = driver.find_element_by_xpath("//*[@id='dynamicFiltersContainer']/div/div[1]/div[2]")
+            more_menu.click()
+            time.sleep(.5)
+            easy_apply = driver.find_element_by_xpath("//*[@id='dynamicFiltersContainer']/div/div[1]/div[2]/div[2]/div[14]/label/div")
+            easy_apply.click()
+        
+        
+            element = WebDriverWait(driver, 20).until(
+                    EC.presence_of_element_located((By.XPATH, "//*[@id='MainCol']/div[1]/ul"))
+                )
+            
+            time.sleep(2)
+        
+
+            more_menu.click()
+            
+        except NoSuchElementException:
+            pass
+  
 
         return True
 
@@ -86,6 +121,7 @@ def aggregate_links(driver):
     # find all hrefs
     allJobLinks = soup.findAll("a", {"class": "jobLink"})
     allLinks = [jobLink['href'] for jobLink in allJobLinks]
+    allLinks = list(dict.fromkeys(list(allLinks)))
     allFixedLinks = []
 
     # clean up the job links by opening, modifying, and 'unraveling' the URL
@@ -128,7 +164,7 @@ def aggregate_links(driver):
 
 # 'main' method to iterate through all pages and aggregate URLs
 def getURLs():
-    driver = webdriver.Chrome(executable_path='/usr/local/bin/chromedriver')
+    driver = webdriver.Chrome(executable_path='/home/picklesueat/Downloads/chromedriver_linux64/chromedriver')
     success = login(driver)
     if not success:
         # close the page if it gets stuck at some point - this logic can be improved
@@ -141,41 +177,37 @@ def getURLs():
     allLinks = set()
     page = 1
     next_url = ''
-    while page < 5: # pick an arbitrary number of pages so this doesn't run infinitely
+    while page < 2: # pick an arbitrary number of pages so this doesn't run infinitely
         print(f'\nNEXT PAGE #: {page}\n')
 
         # on the first page, the URL is unique and doesn't have a field for the page number
-        if page == 1:
+        if page < 4:
             # aggregate links on first page
             allLinks.update(aggregate_links(driver))
+            
+            driver.find_element_by_xpath("//*[@id='FooterPageNav']/div/ul/li["+str(page + 2)+"]").click()
 
-            # find next page button and click it
-            next_page = driver.find_element_by_xpath("//*[@id='FooterPageNav']/div/ul/li[3]/a")
-            this_page = next_page.get_attribute('href')
+            time.sleep(.75)
+            try:
+                driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
+            except Exception:
+                pass
 
-            # use regex to parse out the page number
-            m = re.search('(?P<url>[^;]*?)(?P<page>.htm\?p=)(?P<pagenum>.)', this_page)
-
-            # for page 2 onwards, there's a different page structure that we need to convert from
-            # (idk why it's like this tho)
-            # from: .../jobs-SRCH_IL.0,13_IC1147401_KE14,33.htm?p=2
-            # to: .../jobs-SRCH_IL.0,13_IC1147401_KE14,33_IP2.htm
-            page += 1 # increment page count
-            next_url = f"{m.group('url')}_IP{page}.htm" # update url with new page number
-            time.sleep(1) # just to give things time
-
+            page += 1 
+          
         # same patterns from page 2 onwards
-        if page >=2 :
-            # open page with new URL
-            driver.get(next_url)
-            # collect all the links
+        if page >=4 :
             allLinks.update(aggregate_links(driver))
-            # run regex to get all reusable parts of URL
-            m = re.search('(?P<url>[^;]*?)(?P<pagenum>.)(?P<html>.htm)', next_url)
-            # increment page number for next time
-            page += 1
-            # update URL
-            next_url = f"{m.group('url')}{page}.htm"
+            driver.find_element_by_xpath("//*[@id='FooterPageNav']/div/ul/li[5]").click()
+
+            time.sleep(.75)
+            try:
+                driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
+            except Exception:
+                pass
+
+            page += 1 
+
 
     driver.close()
     return allLinks
