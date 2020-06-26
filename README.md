@@ -7,6 +7,7 @@ A script to automatically search Glassdoor for job listings, aggregate every app
 
 ## Inspiration
 Ever sit at your desk for hours, clicking through endless job listings hoping to strike gold with one response? To solve this, I made a script a few months ago, which would take in a list of job URLs and automatically apply to potentially 100s of jobs with the click of a button. This was great, but there was one problem — the process of aggregating those links is painstaking. So, I wanted to automate that process with this project! ✨
+This works the same as the harshibar's however, you're not restricted to jobs hosted by lever or greenhouse. You can apply to any easy apply job on glassdoor. (For research purpose only)
 
 ## Installation
 1. Install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) (or an alternatie driver for your browser of choice):
