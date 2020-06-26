@@ -1,5 +1,4 @@
-# Software Engineering Job Application Bot (2.0) 👩🏾‍💻
-#### 5 Python Projects in 5 Days - Day 5: Scripting
+Job Application Bot (3.0)
 
 A script to automatically search Glassdoor for job listings, aggregate every application URL, and apply to each job using pre-populated data. ***All with one click!***
 
