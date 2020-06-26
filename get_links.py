@@ -17,22 +17,17 @@ import time # to sleep
 
 # fill this in with your job preferences!
 PREFERENCES = {
-    "position_title": "Software Engineer",
-    "location": "San Francisco, CA",
+    "position_title": "",
+    "location": "  ",
     "username": "",
-    "password":""
+    "password": ""
 }
 
-# helper method to give user time to log into glassdoor
 def login(driver):
-    
-    
+    #login to glassdoor
     driver.get('https://www.glassdoor.com/profile/login_input.htm?userOriginHook=HEADER_SIGNIN_LINK')
-    
-    #avoids any errors with page size
     driver.maximize_window()
     
-    #login
     username_field = driver.find_element_by_xpath("//*[@id='userEmail']")
     password_field = driver.find_element_by_xpath("//*[@id='userPassword']")
     
@@ -44,7 +39,7 @@ def login(driver):
     
     driver.find_element_by_xpath("//*[@id='InlineLoginModule']/div/div/div/div/div[3]/form/div[3]/div[1]").click()
     
-    return True # return once this is complete
+    return True
 
 # navigate to appropriate job listing page
 def go_to_listings(driver):
@@ -74,14 +69,33 @@ def go_to_listings(driver):
             driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
         except NoSuchElementException:
             pass
-       
-        #hitting easy_apply only, optional (useful if most of job listings are not on lever/greenhouse)
+        
+        time.sleep(3)
+        
+        
         try:
+            driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
+        except NoSuchElementException:
+            pass
+        
+        #Adding Filters to the search results
+        try:
+            
+            remote = "//*[@id='dynamicFiltersContainer']/div/div[1]/div[2]/div[2]/div[15]/label"
+
             more_menu = driver.find_element_by_xpath("//*[@id='dynamicFiltersContainer']/div/div[1]/div[2]")
             more_menu.click()
             time.sleep(.5)
+            
+            driver.find_element_by_xpath(remote).click()
+            
+            time.sleep(1)
             easy_apply = driver.find_element_by_xpath("//*[@id='dynamicFiltersContainer']/div/div[1]/div[2]/div[2]/div[14]/label/div")
             easy_apply.click()
+            
+            time.sleep(1)
+            
+            driver.find_element_by_xpath(remote).click()
         
         
             element = WebDriverWait(driver, 20).until(
@@ -93,10 +107,19 @@ def go_to_listings(driver):
 
             more_menu.click()
             
+            
+            #Intern
+            driver.find_element_by_xpath("//*[@id='filter_jobType']").click()
+            time.sleep(.3)
+            driver.find_element_by_xpath("//*[@id='PrimaryDropdown']/ul/li[5]/span[1]").click()
+            
+            time.sleep(.5)
+            
         except NoSuchElementException:
             pass
-  
-
+        
+        #driver.minimize_window()
+        
         return True
 
     # note: please ignore all crappy error handling haha
@@ -112,7 +135,8 @@ def aggregate_links(driver):
             EC.presence_of_element_located((By.XPATH, "//*[@id='MainCol']/div[1]/ul"))
         )
 
-    time.sleep(5)
+    
+
 
     # parse the page source using beautiful soup
     page_source = driver.page_source
@@ -122,13 +146,12 @@ def aggregate_links(driver):
     allJobLinks = soup.findAll("a", {"class": "jobLink"})
     allLinks = [jobLink['href'] for jobLink in allJobLinks]
     allLinks = list(dict.fromkeys(list(allLinks)))
+    
     allFixedLinks = []
 
     # clean up the job links by opening, modifying, and 'unraveling' the URL
     for link in allLinks:
         # first, replace GD_JOB_AD with GD_JOB_VIEW
-        # this will replace the Glassdoor hosted job page to the proper job page
-        # hosted on most likely Greenhouse or Lever
         link = link.replace("GD_JOB_AD", "GD_JOB_VIEW")
 
         # if there is no glassdoor prefex, add that
@@ -136,29 +159,12 @@ def aggregate_links(driver):
 
         if link[0] == '/':
             link = f"https://www.glassdoor.com{link}"
-
-        # then, open up each url and save the result url
-        # because we got a 403 error when opening this normally, we have to establish the user agent
-        user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.9.0.7) Gecko/2009021910 Firefox/3.0.7'
-        headers={'User-Agent':user_agent,}
-        request=urllib.request.Request(link,None,headers) #The assembled request
-
-        try:
-            # the url is on glassdoor itself, but once it's opened, it redirects - so let's store that
-            response = urllib.request.urlopen(request)
-            newLink = response.geturl()
-
-            # if the result url is from glassdoor, it's an 'easy apply' one and worth not saving
-            # however, this logic can be changed if you want to keep those
-            if "glassdoor" not in newLink:
-                print(newLink)
-                print('\n')
-                allFixedLinks.append(newLink)
-        except Exception:
-            # horrible way to catch errors but this doesnt happen regualrly (just 302 HTTP error)
-            print(f'ERROR: failed for {link}')
-            print('\n')
-
+            
+            
+        #for glassdoor links no redirect happens
+        newLink = link
+        allFixedLinks.append(newLink)
+ 
     # convert to a set to eliminate duplicates
     return set(allFixedLinks)
 
@@ -186,7 +192,10 @@ def getURLs():
             allLinks.update(aggregate_links(driver))
             
             driver.find_element_by_xpath("//*[@id='FooterPageNav']/div/ul/li["+str(page + 2)+"]").click()
-
+            
+            
+            
+            
             time.sleep(.75)
             try:
                 driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
@@ -194,12 +203,13 @@ def getURLs():
                 pass
 
             page += 1 
-          
-        # same patterns from page 2 onwards
-        if page >=4 :
+
+        # same patterns from page 3 onwards
+        if page > 3 :
             allLinks.update(aggregate_links(driver))
             driver.find_element_by_xpath("//*[@id='FooterPageNav']/div/ul/li[5]").click()
-
+            
+            
             time.sleep(.75)
             try:
                 driver.find_element_by_xpath("//*[@id='JAModal']/div/div[2]/span").click()
@@ -208,9 +218,11 @@ def getURLs():
 
             page += 1 
 
-
     driver.close()
+    print(len(allLinks))
     return allLinks
 
 # for testing purpose
-# getURLs()
+#getURLs()
+    
+
