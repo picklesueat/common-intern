@@ -15,6 +15,7 @@ I've added the easyapply feature already, in the future I hope to add:
 * upload csv's of applied jobs data to postgresql, for data analysis
 * use gmail api to automatically filter the many, many rejection emails 
 * use regex to classify jobs and be more selective in which I apply to.
+* match the post to resume/cover letter regex+latex
 
 ## Installation
 1. Install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) (or an alternatie driver for your browser of choice):
