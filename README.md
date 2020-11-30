@@ -17,6 +17,33 @@ I've added the easyapply feature already, in the future I hope to add:
 * use regex to classify jobs and be more selective in which I apply to.
 * match the post to resume/cover letter regex+latex
 
+Add mutiprocessing
+from multiprocessing import Process
+from selenium import webdriver
+from selenium.webdriver.chrome.options import     Options
+
+class processTest(Process)
+    def __init__(self,topic):
+        Process.__init__(self)
+        self.topic = topic
+        self.start()
+             
+    def run(self):
+        options = Options()
+        options.add_experimental_option("detach",True)
+        self.driver =     (webdriver.Chrome('YourPathToChromeDriver',options=options))
+        print("Im a search process for "+str(self.driver))
+        self.driver.get("https://www.google.com")
+        seach_box =         self.driver.find_element_by_xpath('//*[@id="tsf"]/div[2]/div[1]/div[1]/div/div[2]/input')
+        search_box.send_keys(self.topic)
+        seach_box.submit()
+    
+    
+if __name__ = '__main__':
+    search_topics=["snakes","python","cats","cat     pictures","rolex","omega"]
+    for topic in search_topics:
+        processTest(topic)
+
 ## Installation
 1. Install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) (or an alternatie driver for your browser of choice):
    * Run `brew cask install chromedriver`
