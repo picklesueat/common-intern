@@ -17,7 +17,8 @@ I've added the easyapply feature already, in the future I hope to add:
 * use regex to classify jobs and be more selective in which I apply to.
 * match the post to resume/cover letter regex+latex
 
-Add mutiprocessing
+Add mutiprocessing:
+```
 from multiprocessing import Process
 from selenium import webdriver
 from selenium.webdriver.chrome.options import     Options
@@ -43,6 +44,7 @@ if __name__ = '__main__':
     search_topics=["snakes","python","cats","cat     pictures","rolex","omega"]
     for topic in search_topics:
         processTest(topic)
+```
 
 ## Installation
 1. Install [ChromeDriver](https://sites.google.com/a/chromium.org/chromedriver/) (or an alternatie driver for your browser of choice):
